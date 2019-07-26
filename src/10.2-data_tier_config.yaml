@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  config: | # YAML for multi-line string
+    # Redis config file
+    tcp-keepalive 240
+    maxmemory 1mb

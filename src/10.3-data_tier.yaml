@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-tier
+  labels:
+    app: microservices
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP # default 
+    name: redis # optional when only 1 port
+  selector:
+    tier: data 
+  type: ClusterIP # default
+---
+apiVersion: apps/v1 # apps API group
+kind: Deployment
+metadata:
+  name: data-tier
+  labels:
+    app: microservices
+    tier: data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: data
+  template:
+    metadata:
+      labels:
+        app: microservices
+        tier: data
+    spec: # Pod spec
+      containers:
+      - name: redis
+        image: redis:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 6379
+            name: redis
+        livenessProbe:
+          tcpSocket:
+            port: redis # named port
+          initialDelaySeconds: 15
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+        command:
+          - redis-server
+          - /etc/redis/redis.conf
+        volumeMounts:
+          - mountPath: /etc/redis
+            name: config
+      volumes:
+        - name: config
+          configMap:
+            name: redis-config
+            items:
+            - key: config
+              path: redis.conf

@@ -1,0 +1,18 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-tier
+  labels:
+    app: microservices
+    tier: app
+spec:
+  maxReplicas: 5
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-tier
+  targetCPUUtilizationPercentage: 70
+
+# Equivalent to
+# kubectl autoscale deployment app-tier --max=5 --min=1 --cpu-percent=70

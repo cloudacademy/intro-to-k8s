@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-tier
+  labels:
+    app: microservices
+    tier: support
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: support
+  template:
+    metadata:
+      labels:
+        app: microservices
+        tier: support
+    spec:
+        containers:
+
+        - name: counter
+          image: lrakai/microservices:counter-v1
+          env:
+            - name: API_URL
+              # DNS for service discovery
+              # Naming pattern:
+              #   IP address: <service_name>.<service_namespace>
+              #   Port: needs to be extracted from SRV DNS record
+              value: http://app-tier:8080
+
+        - name: poller
+          image: lrakai/microservices:poller-v1
+          env:
+            - name: API_URL
+              # omit namespace to only search in the same namespace
+              value: http://app-tier:$(APP_TIER_SERVICE_PORT)

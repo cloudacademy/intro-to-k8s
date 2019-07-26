@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-tier
+  labels:
+    app: microservices
+spec:
+  ports:
+  - port: 8080
+  selector:
+    tier: app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-tier
+  labels:
+    app: microservices
+    tier: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: microservices
+        tier: app
+    spec:
+      containers:
+      - name: server
+        image: lrakai/microservices:server-v1
+        ports:
+          - containerPort: 8080
+            name: server
+        env:
+          - name: REDIS_URL
+            # Environment variable service discovery
+            # Naming pattern:
+            #   IP address: <all_caps_service_name>_SERVICE_HOST
+            #   Port: <all_caps_service_name>_SERVICE_PORT
+            #   Named Port: <all_caps_service_name>_SERVICE_PORT_<all_caps_port_name>
+            value: redis://$(DATA_TIER_SERVICE_HOST):$(DATA_TIER_SERVICE_PORT_REDIS)
+            # In multi-container example value was
+            # value: redis://localhost:6379 
+          - name: DEBUG
+            value: express:*
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-tier-secret
+                key: api-key
+        livenessProbe:
+          httpGet:
+            path: /probe/liveness
+            port: server
+          initialDelaySeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /probe/readiness
+            port: server
+          initialDelaySeconds: 3
+      initContainers:
+        - name: await-redis
+          image: lrakai/microservices:server-v1
+          env:
+          - name: REDIS_URL
+            value: redis://$(DATA_TIER_SERVICE_HOST):$(DATA_TIER_SERVICE_PORT_REDIS)
+          command:
+            - npm
+            - run-script
+            - await-redis
