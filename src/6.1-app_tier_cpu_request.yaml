@@ -18,7 +18,7 @@ metadata:
     app: microservices
     tier: app
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       tier: app
