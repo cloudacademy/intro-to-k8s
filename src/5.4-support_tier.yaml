@@ -26,7 +26,7 @@ spec:
               # Naming pattern:
               #   IP address: <service_name>.<service_namespace>
               #   Port: needs to be extracted from SRV DNS record
-              value: http://app-tier.service-discovery:8080
+              value: http://app-tier.deployments:8080
 
         - name: poller
           image: lrakai/microservices:poller-v1
