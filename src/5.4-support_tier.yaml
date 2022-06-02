@@ -6,7 +6,7 @@ metadata:
     app: microservices
     tier: support
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       tier: support
